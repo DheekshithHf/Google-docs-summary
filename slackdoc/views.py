@@ -9,13 +9,55 @@ import json
 import logging
 import threading 
 import requests
+import re 
+def convert_markdown_to_display(text):
+    """
+    Converts markdown to nicely formatted display text
+    Good for: Better formatting, Slack/Discord style output
+    """
+    lines = text.split('\n')
+    result = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            result.append('')
+            continue
+            
+        # Headers - make them standout
+        if line.startswith('#'):
+            header_text = re.sub(r'^#+\s*', '', line)
+            result.append(f"📌 {header_text.upper()}")
+            result.append('─' * min(len(header_text) + 2, 40))
+            continue
+        
+        # Bold text
+        line = re.sub(r'\*\*(.*?)\*\*', r'🔸 \1', line)
+        
+        # Bullet points
+        if re.match(r'^[\s]*[-*+]\s', line):
+            bullet_text = re.sub(r'^[\s]*[-*+]\s*', '', line)
+            result.append(f"  • {bullet_text}")
+            continue
+            
+        # Numbered lists
+        if re.match(r'^\d+\.\s', line):
+            list_text = re.sub(r'^\d+\.\s*', '', line)
+            result.append(f"  • {list_text}")
+            continue
+        
+        # Regular text
+        result.append(line)
+    
+    return '\n'.join(result)
 
 def send_summary_to_slack(response_url, doc_url):
     from .ai_summary import generate_summary
     summary = generate_summary(doc_url)
+    formatted_summary=convert_markdown_to_display(summary)
     payload = {
         "response_type": "in_channel",
-        "text": summary
+        "text": formatted_summary
     }
     try:
         requests.post(response_url, json=payload)
