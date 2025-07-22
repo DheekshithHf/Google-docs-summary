@@ -1,0 +1,66 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environment
+venv/
+env/
+.venv/
+lenv/
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+
+# Media and static files
+/media
+/staticfiles
+
+# VS Code settings
+.vscode/
+
+# Mac OS
+.DS_Store
+
+# Environment variables
+.env
+*.env
+
+# Google credentials
+credentials.json
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Test and coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.xml
+*.cover
+*.py,cover
+.cache
+nosetests.xml
+pytest_cache/
+test-results/
+
+# Migrations (optional, if you want to ignore them)
+# **/migrations/
+
+# Postman collections (if any)
+*.postman_collection.json
+
+# Initial commit folder (optional, if not needed in repo)
+# Initial_commit/
+
+slackdoc/gdrive_utils.py
+slackdoc/ai_summary.py
