@@ -7,8 +7,20 @@ from .ai_summary import generate_summary
 from .gdrive_utils import GoogleDriveDownloader
 import json
 import logging
+import threading 
+import requests
 
-
+def send_summary_to_slack(response_url, doc_url):
+    from .ai_summary import generate_summary
+    summary = generate_summary(doc_url)
+    payload = {
+        "response_type": "in_channel",
+        "text": summary
+    }
+    try:
+        requests.post(response_url, json=payload)
+    except Exception as e:
+        print(f"Failed to send summary to Slack: {e}")
 
 @csrf_exempt
 def slack_events(request):
@@ -68,14 +80,20 @@ def handle_slash_command(request):
         print('------------------------------------')
         print(f"Received slash command: {command} with text: {text} from user: {user_id} in channel: {channel_id}")
         print('------------------------------------')
-        from .ai_summary import generate_summary
-        from .gdocs_utils import get_doc_content
+        
         if command == '/summarize-doc':
-            print("hello")
-            content =generate_summary(text)
-            
-            
-            return JsonResponse(content)
+            # Immediately respond to Slack to avoid timeout
+            response_url = payload.get('response_url')
+            doc_url = text
+            threading.Thread(
+                target=send_summary_to_slack,
+                args=(response_url, doc_url),
+                daemon=True
+            ).start()
+            return JsonResponse({
+                "response_type": "ephemeral",
+                "text": "📝 Summarization started! You’ll get your summary here soon."
+            })
         
         
      
