@@ -7,8 +7,62 @@ from .ai_summary import generate_summary
 from .gdrive_utils import GoogleDriveDownloader
 import json
 import logging
+import threading 
+import requests
+import re 
+def convert_markdown_to_display(text):
+    """
+    Converts markdown to nicely formatted display text
+    Good for: Better formatting, Slack/Discord style output
+    """
+    lines = text.split('\n')
+    result = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            result.append('')
+            continue
+            
+        # Headers - make them standout
+        if line.startswith('#'):
+            header_text = re.sub(r'^#+\s*', '', line)
+            result.append(f"📌 {header_text.upper()}")
+            result.append('─' * min(len(header_text) + 2, 40))
+            continue
+        
+        # Bold text
+        line = re.sub(r'\*\*(.*?)\*\*', r'🔸 \1', line)
+        
+        # Bullet points
+        if re.match(r'^[\s]*[-*+]\s', line):
+            bullet_text = re.sub(r'^[\s]*[-*+]\s*', '', line)
+            result.append(f"  • {bullet_text}")
+            continue
+            
+        # Numbered lists
+        if re.match(r'^\d+\.\s', line):
+            list_text = re.sub(r'^\d+\.\s*', '', line)
+            result.append(f"  • {list_text}")
+            continue
+        
+        # Regular text
+        result.append(line)
+    
+    return '\n'.join(result)
 
-
+def send_summary_to_slack(response_url, doc_url):
+    from .ai_summary import generate_summary
+    summary = generate_summary(doc_url)
+    formatted_summary=convert_markdown_to_display(summary)
+    payload = {
+        "response_type": "in_channel",
+        "text": formatted_summary
+    }
+    try:
+        requests.post(response_url, json=payload)
+    except Exception as e:
+        print(f"Failed to send summary to Slack: {e}")
 
 @csrf_exempt
 def slack_events(request):
@@ -68,18 +122,23 @@ def handle_slash_command(request):
         print('------------------------------------')
         print(f"Received slash command: {command} with text: {text} from user: {user_id} in channel: {channel_id}")
         print('------------------------------------')
-        from .gdocs_utils import get_doc_content
+        
         if command == '/summarize-doc':
-            print("hello")
-            content = get_doc_content(text)
-            
-            print('------------------------------------')
-            print(content)
-            print('------------------------------------')
-            return JsonResponse({'ok': True})
+            # Immediately respond to Slack to avoid timeout
+            response_url = payload.get('response_url')
+            doc_url = text
+            threading.Thread(
+                target=send_summary_to_slack,
+                args=(response_url, doc_url),
+                daemon=True
+            ).start()
+            return JsonResponse({
+                "response_type": "ephemeral",
+                "text": "📝 Summarization started! You’ll get your summary here soon."
+            })
         
         
-        # return JsonResponse(response)
+     
         
     except Exception as e:
         # logger.error(f"Error handling slash command: {str(e)}")
