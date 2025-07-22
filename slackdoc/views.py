@@ -68,18 +68,17 @@ def handle_slash_command(request):
         print('------------------------------------')
         print(f"Received slash command: {command} with text: {text} from user: {user_id} in channel: {channel_id}")
         print('------------------------------------')
+        from .ai_summary import generate_summary
         from .gdocs_utils import get_doc_content
         if command == '/summarize-doc':
             print("hello")
-            content = get_doc_content(text)
+            content =generate_summary(text)
             
-            print('------------------------------------')
-            print(content)
-            print('------------------------------------')
-            return JsonResponse({'ok': True})
+            
+            return JsonResponse(content)
         
         
-        # return JsonResponse(response)
+     
         
     except Exception as e:
         # logger.error(f"Error handling slash command: {str(e)}")

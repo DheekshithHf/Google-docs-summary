@@ -3,7 +3,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 SCOPES = ['https://www.googleapis.com/auth/documents.readonly']
-SERVICE_ACCOUNT_FILE = r'/Users/happyfox/Documents/HappyFox/Google-doc-summ/slackdoc/credentials.json'  # Place your downloaded JSON in the project root or update the path
+SERVICE_ACCOUNT_FILE = r'/Users/happyfox/Documents/HappyFox/Google-doc-summ/Google-docs-summary/slackdoc/credentials.json'  # Place your downloaded JSON in the project root or update the path
 
 def extract_doc_id(doc_url):
     """
